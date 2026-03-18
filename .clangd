@@ -1,0 +1,7 @@
+# .clangd  (place in project root)
+CompileFlags:
+  Add: [-std=c++17, -xc++]   # or c++20 / c++23 if you use it
+  Remove: [-mno-direct-extern-access]
+
+Completion:
+  HeaderInsertion: Never
