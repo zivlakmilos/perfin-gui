@@ -1,6 +1,4 @@
 BasedOnStyle: LLVM
-
-BasedOnStyle: LLVM
 IndentWidth: 2
 TabWidth: 2
 UseTab: Never
@@ -18,6 +16,8 @@ BraceWrapping:
   AfterClass:    true
   AfterControlStatement: MultiLine
   BeforeElse:    true
+
+BreakBeforeBraces: Allman
 
 PointerAlignment: Right
 ReferenceAlignment: Pointer

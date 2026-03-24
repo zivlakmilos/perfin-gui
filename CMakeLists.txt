@@ -12,10 +12,12 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 qt_standard_project_setup()
 
 qt_add_executable(perfin
-    src/main.cpp
+    src/DWRibbon.cpp
+    src/DWRibbon.ui
 
     src/MainWindow.cpp
-    src/WRibbon.cpp
+
+    src/main.cpp
 )
 
 target_link_libraries(perfin PRIVATE Qt6::Widgets)
