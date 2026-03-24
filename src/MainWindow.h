@@ -4,6 +4,8 @@
 #include <QMainWindow>
 
 class DWRibbon;
+class QTabWidget;
+class QLabel;
 
 class MainWindow : public QMainWindow
 {
@@ -17,6 +19,8 @@ private:
   void setupUi(void);
 
   DWRibbon *m_dwRibbon;
+  QTabWidget *m_twCentralWidget;
+  QLabel *m_lblStatus;
 };
 
 #endif // _MAIN_WINDOW_H_
