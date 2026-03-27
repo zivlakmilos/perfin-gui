@@ -17,7 +17,13 @@ public:
   virtual ~DWRibbon(void);
 
 private:
+  void setupHandlers(void);
+
   Ui::DWRibbon *m_ui;
+
+signals:
+  void accountsClicked(void);
+  void quitClicked(void);
 };
 
 #endif // _WRIBBON_H_

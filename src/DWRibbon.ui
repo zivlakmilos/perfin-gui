@@ -32,6 +32,22 @@
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
+         <widget class="QGroupBox" name="groupBox_2">
+          <property name="title">
+           <string>Data</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <widget class="QPushButton" name="btnAccounts">
+             <property name="text">
+              <string>Accounts</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
          <widget class="QGroupBox" name="groupBox">
           <property name="title">
            <string>App</string>
@@ -40,7 +56,7 @@
            <item>
             <widget class="QPushButton" name="btnQuit">
              <property name="text">
-              <string>&amp;Quit</string>
+              <string>Quit</string>
              </property>
             </widget>
            </item>
