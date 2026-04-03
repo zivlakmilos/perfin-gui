@@ -41,8 +41,8 @@ void runMigrations(void)
 
   sql = "CREATE TABLE IF NOT EXISTS accounts ("
         "  id TEXT PRIMARY KEY,"
-        "  account_type TEXT,"
-        "  parent_id TEXT,"
+        "  accountType TEXT,"
+        "  parentId TEXT,"
         "  title TEXT"
         ")";
 

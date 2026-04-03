@@ -19,6 +19,9 @@ public:
 private:
   void setupHandlers(void);
 
+  void importFromJson(void);
+  void importJsonArray(const QJsonArray &array, const QString &parentId = QString());
+
   Ui::WAccounts *m_ui;
 };
 
