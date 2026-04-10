@@ -6,6 +6,15 @@
 
 #include "Database.h"
 
+struct AccountNode
+{
+  QString m_id;
+  QString m_accountType;
+  QString m_title;
+  AccountNode *m_parent;
+  QVector<AccountNode *> m_childs;
+};
+
 class AccountsModel : public QAbstractItemModel
 {
 public:
@@ -20,16 +29,24 @@ public:
   int rowCount(const QModelIndex &parent = {}) const override;
   int columnCount(const QModelIndex &parent = {}) const override;
 
+  void reloadData(void);
+  void clearData(void);
+  void clearNode(AccountNode *node);
+  AccountNode *findNode(AccountNode *node, QString id);
+
 private:
+  AccountNode *m_data;
 };
 
 AccountsModel::AccountsModel(QObject *parent) :
-    QAbstractItemModel(parent)
+    QAbstractItemModel(parent),
+    m_data(nullptr)
 {
 }
 
 AccountsModel::~AccountsModel()
 {
+  clearData();
 }
 
 QVariant AccountsModel::data(const QModelIndex &index, int role) const
@@ -39,7 +56,8 @@ QVariant AccountsModel::data(const QModelIndex &index, int role) const
     return QVariant();
   }
 
-  return "test";
+  AccountNode *node = static_cast<AccountNode *>(index.internalPointer());
+  return node->m_title;
 }
 
 Qt::ItemFlags AccountsModel::flags(const QModelIndex &index) const
@@ -51,7 +69,7 @@ QVariant AccountsModel::headerData(int section, Qt::Orientation orientation, int
 {
   if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
   {
-    return "header";
+    return "Account";
   }
 
   return QVariant();
@@ -59,22 +77,181 @@ QVariant AccountsModel::headerData(int section, Qt::Orientation orientation, int
 
 QModelIndex AccountsModel::index(int row, int column, const QModelIndex &parent) const
 {
+  if (!hasIndex(row, column, parent))
+  {
+    return QModelIndex();
+  }
+
+  AccountNode *parentNode = m_data;
+  if (parent.isValid())
+  {
+    parentNode = static_cast<AccountNode *>(parent.internalPointer());
+  }
+
+  if (row < parentNode->m_childs.length())
+  {
+    return createIndex(row, column, parentNode->m_childs[row]);
+  }
+
   return QModelIndex();
 }
 
 QModelIndex AccountsModel::parent(const QModelIndex &index) const
 {
-  return QModelIndex();
+  if (!index.isValid())
+  {
+    return QModelIndex();
+  }
+
+  AccountNode *childNode = static_cast<AccountNode *>(index.internalPointer());
+  AccountNode *parentNode = childNode->m_parent;
+
+  if (parentNode == m_data)
+  {
+    return QModelIndex();
+  }
+
+  int row = parentNode->m_childs.indexOf(childNode);
+  return createIndex(row, 0, parentNode);
 }
 
 int AccountsModel::rowCount(const QModelIndex &parent) const
 {
-  return 10;
+  AccountNode *node = m_data;
+  if (parent.isValid())
+  {
+    node = static_cast<AccountNode *>(parent.internalPointer());
+  }
+
+  return node->m_childs.length();
 }
 
 int AccountsModel::columnCount(const QModelIndex &parent) const
 {
   return 1;
+}
+
+void AccountsModel::reloadData(void)
+{
+  beginResetModel();
+
+  clearData();
+
+  m_data = new AccountNode;
+  m_data->m_id = "root";
+  m_data->m_accountType = "";
+  m_data->m_title = "";
+
+  m_data->m_childs.append(new AccountNode{
+      .m_id = "equity",
+      .m_accountType = "equity",
+      .m_title = "Equity",
+      .m_parent = m_data,
+  });
+  m_data->m_childs.append(new AccountNode{
+      .m_id = "asset",
+      .m_accountType = "asset",
+      .m_title = "Assets",
+      .m_parent = m_data,
+  });
+  m_data->m_childs.append(new AccountNode{
+      .m_id = "liability",
+      .m_accountType = "liability",
+      .m_title = "Liability",
+      .m_parent = m_data,
+  });
+  m_data->m_childs.append(new AccountNode{
+      .m_id = "income",
+      .m_accountType = "income",
+      .m_title = "Incomes",
+      .m_parent = m_data,
+  });
+  m_data->m_childs.append(new AccountNode{
+      .m_id = "expense",
+      .m_accountType = "expense",
+      .m_title = "Expenses",
+      .m_parent = m_data,
+  });
+
+  QSqlDatabase db = QSqlDatabase::database();
+  QSqlQuery query;
+  QString sql = "SELECT * FROM accounts";
+  if (!query.exec(sql))
+  {
+    qDebug() << "error reloading accounts data";
+    return;
+  }
+
+  while (query.next())
+  {
+    AccountNode *node = new AccountNode{
+        .m_id = query.value(0).toString(),
+        .m_accountType = query.value(1).toString(),
+        .m_title = query.value(3).toString(),
+    };
+    QString parentId = query.value(2).toString();
+    if (parentId == "")
+    {
+      parentId = node->m_accountType;
+    }
+    AccountNode *parent = findNode(m_data, parentId);
+    if (!parent)
+    {
+      qDebug() << "error reloading accounts data; missing parent account";
+      delete node;
+      continue;
+    }
+
+    node->m_parent = parent;
+    parent->m_childs.append(node);
+  }
+
+  endResetModel();
+}
+
+void AccountsModel::clearData(void)
+{
+  clearNode(m_data);
+  m_data = nullptr;
+}
+
+void AccountsModel::clearNode(AccountNode *node)
+{
+  if (!node)
+  {
+    return;
+  }
+
+  for (auto child : node->m_childs)
+  {
+    clearNode(child);
+  }
+
+  delete node;
+}
+
+AccountNode *AccountsModel::findNode(AccountNode *node, QString id)
+{
+  if (!node)
+  {
+    return nullptr;
+  }
+
+  if (id == node->m_id)
+  {
+    return node;
+  }
+
+  for (auto child : node->m_childs)
+  {
+    AccountNode *n = findNode(child, id);
+    if (n)
+    {
+      return n;
+    }
+  }
+
+  return nullptr;
 }
 
 WAccounts::WAccounts(QWidget *parent) :
@@ -84,7 +261,11 @@ WAccounts::WAccounts(QWidget *parent) :
   m_ui->setupUi(this);
   setupHandlers();
 
-  m_ui->treeView->setModel(new AccountsModel(this));
+  m_model = new AccountsModel(this);
+  m_model->reloadData();
+
+  m_ui->twAccounts->setModel(m_model);
+  m_ui->twAccounts->expandAll();
 }
 
 WAccounts::~WAccounts(void)
