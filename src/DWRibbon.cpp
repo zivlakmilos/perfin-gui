@@ -19,6 +19,6 @@ DWRibbon::~DWRibbon(void)
 
 void DWRibbon::setupHandlers(void)
 {
-  connect(m_ui->btnAccounts, &QPushButton::clicked, this, &DWRibbon::accountsClicked);
-  connect(m_ui->btnQuit, &QPushButton::clicked, this, &DWRibbon::quitClicked);
+  connect(m_ui->btnAccounts, &QToolButton::clicked, this, &DWRibbon::accountsClicked);
+  connect(m_ui->btnQuit, &QToolButton::clicked, this, &DWRibbon::quitClicked);
 }

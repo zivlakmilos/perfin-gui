@@ -32,15 +32,78 @@
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
+         <widget class="QGroupBox" name="groupBox_3">
+          <property name="title">
+           <string>Income</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QToolButton" name="btnSalary">
+             <property name="toolTip">
+              <string>Salary</string>
+             </property>
+             <property name="statusTip">
+              <string>Salary</string>
+             </property>
+             <property name="text">
+              <string>Salary</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox_4">
+          <property name="title">
+           <string>Expenses</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <widget class="QToolButton" name="btnFiscalReceipt">
+             <property name="toolTip">
+              <string>Fiscal Receipt</string>
+             </property>
+             <property name="statusTip">
+              <string>Fiscal Receipt</string>
+             </property>
+             <property name="text">
+              <string>Fiscal Receipt</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
          <widget class="QGroupBox" name="groupBox_2">
           <property name="title">
            <string>Data</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_3">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
-            <widget class="QPushButton" name="btnAccounts">
+            <widget class="QToolButton" name="btnAccounts">
+             <property name="toolTip">
+              <string>Accounts</string>
+             </property>
+             <property name="statusTip">
+              <string>Accounts</string>
+             </property>
              <property name="text">
               <string>Accounts</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="btnOpenYear">
+             <property name="toolTip">
+              <string>Open Year</string>
+             </property>
+             <property name="statusTip">
+              <string>Open Year</string>
+             </property>
+             <property name="text">
+              <string>Open Year</string>
              </property>
             </widget>
            </item>
@@ -52,9 +115,15 @@
           <property name="title">
            <string>App</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_2">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
-            <widget class="QPushButton" name="btnQuit">
+            <widget class="QToolButton" name="btnQuit">
+             <property name="toolTip">
+              <string>Quit</string>
+             </property>
+             <property name="statusTip">
+              <string>Quit</string>
+             </property>
              <property name="text">
               <string>Quit</string>
              </property>
