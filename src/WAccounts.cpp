@@ -456,6 +456,9 @@ void WAccounts::importFromJson(void)
   importJsonArray(accountsArray);
 
   file.close();
+
+  m_model->reloadData();
+  m_ui->twAccounts->expandAll();
 }
 
 void WAccounts::importJsonArray(const QJsonArray &array, const QString &parentId)
