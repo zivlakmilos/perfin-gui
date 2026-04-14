@@ -33,6 +33,7 @@ public:
   void clearData(void);
   void clearNode(AccountNode *node);
   AccountNode *findNode(AccountNode *node, QString id);
+  void insertNode(AccountNode *node, QString parentId);
 
 private:
   AccountNode *m_data;
@@ -254,9 +255,23 @@ AccountNode *AccountsModel::findNode(AccountNode *node, QString id)
   return nullptr;
 }
 
+void AccountsModel::insertNode(AccountNode *node, QString parentId)
+{
+  AccountNode *parent = findNode(m_data, parentId);
+  if (!parent)
+  {
+    return;
+  }
+
+  parent->m_childs.append(node);
+  node->m_parent = parent;
+}
+
 WAccounts::WAccounts(QWidget *parent) :
     WBase(parent),
-    m_ui(new Ui::WAccounts)
+    m_ui(new Ui::WAccounts),
+    m_currentAccount(nullptr),
+    m_isCurrentModified(false)
 {
   m_ui->setupUi(this);
   setupHandlers();
@@ -279,6 +294,132 @@ WAccounts::~WAccounts(void)
 void WAccounts::setupHandlers(void)
 {
   connect(m_ui->btnImport, &QPushButton::clicked, this, &WAccounts::importFromJson);
+
+  connect(m_ui->twAccounts, &QTreeView::customContextMenuRequested, this, &WAccounts::showAccountsContextMenu);
+  connect(m_ui->twAccounts, &QTreeView::doubleClicked, this, &WAccounts::editAccount);
+
+  connect(m_ui->txtTitle, &QLineEdit::textChanged, this, [&]() { m_isCurrentModified = true; });
+  connect(m_ui->btnSave, &QPushButton::clicked, this, &WAccounts::saveAccount);
+}
+
+void WAccounts::showAccountsContextMenu(const QPoint &point)
+{
+  QModelIndex index = m_ui->twAccounts->indexAt(point);
+  if (!index.isValid())
+  {
+    return;
+  }
+  m_ui->twAccounts->setCurrentIndex(index);
+
+  QMenu *menu = new QMenu(this);
+
+  menu->addAction(tr("Edit account"), this, [&]() { editAccount(index); });
+
+  menu->addAction(tr("Create child account"), this,
+                  [&]()
+                  {
+                    // TODO: check if modify flag is set and display yes/no modal
+                    AccountNode *node = static_cast<AccountNode *>(index.internalPointer());
+                    m_currentAccount = new AccountNode{
+                        .m_id = "",
+                        .m_accountType = node->m_accountType,
+                        .m_title = "",
+                        .m_parent = node,
+                    };
+                    if (node->m_id == node->m_accountType)
+                    {
+                      m_currentAccount->m_parent = nullptr;
+                    }
+                    m_isCurrentModified = false;
+
+                    m_ui->txtTitle->setText(m_currentAccount->m_title);
+                  });
+
+  QPoint pos = m_ui->twAccounts->viewport()->mapToGlobal(point);
+  menu->exec(pos);
+}
+
+void WAccounts::editAccount(const QModelIndex &index)
+{
+  // TODO: check if modify flag is set and display yes/no modal
+  AccountNode *node = static_cast<AccountNode *>(index.internalPointer());
+  m_currentAccount = node;
+  m_isCurrentModified = false;
+  m_ui->txtTitle->setText(m_currentAccount->m_title);
+}
+
+void WAccounts::saveAccount(void)
+{
+  if (!m_isCurrentModified || !m_currentAccount)
+  {
+    return;
+  }
+
+  m_currentAccount->m_title = m_ui->txtTitle->text();
+
+  QSqlDatabase db = QSqlDatabase::database();
+  QSqlQuery query;
+
+  QString parentId;
+  if (m_currentAccount->m_parent)
+  {
+    parentId = m_currentAccount->m_parent->m_id;
+  }
+
+  if (m_currentAccount->m_id == "")
+  {
+    QString id = generateId();
+    QString sql = "INSERT INTO accounts ("
+                  "  id,"
+                  "  accountType,"
+                  "  parentId,"
+                  "  title"
+                  ") VALUES ("
+                  "  :id,"
+                  "  :accountType,"
+                  "  :parentId,"
+                  "  :title"
+                  ")";
+    query.prepare(sql);
+    query.bindValue(":id", id);
+    query.bindValue(":accountType", m_currentAccount->m_accountType);
+    query.bindValue(":parentId", parentId);
+    query.bindValue(":title", m_currentAccount->m_title);
+    if (!query.exec())
+    {
+      QMessageBox::warning(this, tr("Create Account"), tr("Fail to create account"));
+      qDebug() << "create account sql error: " << query.lastError().text();
+      return;
+    }
+
+    m_currentAccount->m_id = id;
+    if (parentId == "")
+    {
+      parentId = m_currentAccount->m_accountType;
+    }
+    m_model->insertNode(m_currentAccount, parentId);
+
+    m_model->layoutChanged();
+  }
+  else
+  {
+    QString sql = "UPDATE accounts SET"
+                  "  title=:title"
+                  " WHERE id=:id";
+    query.prepare(sql);
+    query.bindValue(":id", m_currentAccount->m_id);
+    query.bindValue(":title", m_currentAccount->m_title);
+    if (!query.exec())
+    {
+      QMessageBox::warning(this, tr("Update Account"), tr("Fail to update account"));
+      qDebug() << "update account sql error: " << query.lastError().text();
+      return;
+    }
+
+    m_model->layoutChanged();
+  }
+
+  m_isCurrentModified = false;
 }
 
 void WAccounts::importFromJson(void)
