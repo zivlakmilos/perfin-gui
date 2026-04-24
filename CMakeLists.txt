@@ -11,24 +11,16 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Sql)
 
 qt_standard_project_setup()
 
+add_subdirectory(src/core)
+add_subdirectory(src/ui)
+
 qt_add_executable(perfin
-    src/DWRibbon.cpp
-    src/DWRibbon.ui
-
-    src/WAccounts.cpp
-    src/WAccounts.ui
-
-    src/WBase.cpp
-    src/Database.cpp
-
-    src/MainWindow.cpp
-
-    src/main.cpp
+  src/main.cpp
 )
 
-target_link_libraries(perfin PRIVATE Qt6::Widgets Qt6::Sql)
+target_link_libraries(perfin PRIVATE ui Qt6::Widgets Qt6::Sql)
 
 set_target_properties(perfin PROPERTIES
-    WIN32_EXECUTABLE ON
-    MACOSX_BUNDLE ON
+  WIN32_EXECUTABLE ON
+  MACOSX_BUNDLE ON
 )
